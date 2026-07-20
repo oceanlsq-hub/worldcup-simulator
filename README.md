@@ -20,4 +20,4 @@ A sports analytics project built with Python, Pandas, NumPy and Streamlit.
 
 ## Live Demo
 
-[Your Streamlit URL]
+ [worldcup-simulator.streamlit.app](https://worldcup-simulator-rxrseeqweesf4wfp5xeykh.streamlit.app/)
