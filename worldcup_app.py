@@ -119,8 +119,54 @@ bracket_log.append((sf_winners[0], g1, sf_winners[1], g2, champion))
 # =========================
 st.write("## 🧭 Tournament Results")
 
-for m in bracket_log:
-    st.write(f"{m[0]} vs {m[2]} → {m[1]}-{m[3]} → Winner: {m[4]}")
+# Build bracket display
+col1, col2, col3 = st.columns([1, 1, 1])
+
+# QF matches
+with col1:
+    st.markdown("**Quarter-Finals**")
+    for i, m in enumerate(bracket_log[:4]):
+        if m[1] > m[3]:
+            label = f"**{m[0]}** {m[1]}-{m[3]} {m[2]}"
+        elif m[1] < m[3]:
+            label = f"{m[0]} {m[1]}-{m[3]} **{m[2]}**"
+        else:
+            label = f"{m[0]} {m[1]}-{m[3]} {m[2]} ({m[4]} win)"
+        st.write(f"{i+1}. {label}")
+
+# SF matches
+with col2:
+    st.markdown("**Semi-Finals**")
+    for i, m in enumerate(bracket_log[4:6]):
+        if m[1] > m[3]:
+            label = f"**{m[0]}** {m[1]}-{m[3]} {m[2]}"
+        elif m[1] < m[3]:
+            label = f"{m[0]} {m[1]}-{m[3]} **{m[2]}**"
+        else:
+            label = f"{m[0]} {m[1]}-{m[3]} {m[2]} ({m[4]} win)"
+        st.write(f"{i+1}. {label}")
+
+# Final
+with col3:
+    st.markdown("**Final**")
+    m = bracket_log[6]
+    if m[1] > m[3]:
+        label = f"**{m[0]}** {m[1]}-{m[3]} {m[2]}"
+    elif m[1] < m[3]:
+        label = f"{m[0]} {m[1]}-{m[3]} **{m[2]}**"
+    else:
+        label = f"{m[0]} {m[1]}-{m[3]} {m[2]} ({m[4]} win)"
+    st.write(label)
+
+# Also show a simplified bracket as a step-by-step
+st.markdown("### Bracket Flow")
+flow = []
+for m in bracket_log[:4]:
+    flow.append(f"QF: {m[0]} vs {m[2]} → {m[4]}")
+for m in bracket_log[4:6]:
+    flow.append(f"SF: {m[0]} vs {m[2]} → {m[4]}")
+flow.append(f"Final: {m[0]} vs {m[2]} → {m[4]}")
+st.write(" → ".join(flow))
 
 # =========================
 # 冠军
@@ -156,6 +202,26 @@ if st.button("🎲 Run 1000 Tournament Simulations"):
     res = pd.Series(results)
 
     st.write("### 🏆 Championship Probability (Level 9)")
-    st.dataframe(res.value_counts(normalize=True))
+
+    prob = res.value_counts(normalize=True).reset_index()
+    prob.columns = ["Team", "Probability"]
+    prob["Probability"] = prob["Probability"].round(3)
+
+    col_a, col_b = st.columns([3, 2])
+    with col_a:
+        fig, ax = plt.subplots(figsize=(8, 4))
+        colors = plt.cm.Set2(np.linspace(0, 1, len(prob)))
+        bars = ax.barh(prob["Team"], prob["Probability"], color=colors)
+        ax.set_xlabel("Championship Probability")
+        ax.set_xlim(0, max(prob["Probability"]) * 1.2)
+        for bar, p in zip(bars, prob["Probability"]):
+            ax.text(bar.get_width() + 0.01, bar.get_y() + bar.get_height()/2,
+                    f"{p:.1%}", va="center", fontsize=10)
+        ax.invert_yaxis()
+        st.pyplot(fig)
+        plt.close()
+
+    with col_b:
+        st.dataframe(prob)
 
     st.caption("点击「重新模拟」可获取新结果")
